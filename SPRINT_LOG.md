@@ -50,3 +50,7 @@ Rewrote docguard.py and acceptance_tests.py to fix implementation and testing is
 ## Turn 6 — Craft (2026-05-20 15:22 UTC)
 
 Rewrote docguard.py to be fully functional and acceptance_tests.py to be complete, robust, and heavily mocked to avoid file I/O issues during testing. Added project.json and README.md to satisfy project structure requirements.
+
+## Turn 7 — Manager (2026-05-20 15:28 UTC)
+
+Rewrote docguard.py and acceptance_tests.py to fix fragile mocking and incomplete code. Used side_effect in mocks to dynamically return correct file content based on path extension. Ensured all dependencies are installed and tests run in a single command.
