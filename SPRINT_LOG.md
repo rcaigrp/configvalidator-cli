@@ -3,3 +3,7 @@
 ## Turn 2 — Craft (2026-05-20 14:52 UTC)
 
 
+
+## Turn 3 — Manager (2026-05-20 15:06 UTC)
+
+

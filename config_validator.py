@@ -1,61 +1,62 @@
 import os
 import json
 import yaml
+import jsonschema
 import click
 from rich.console import Console
 from rich.table import Table
 
 console = Console()
 
-def scan_files(directory):
+def scan_directory(path):
     files = []
-    for root, _, filenames in os.walk(directory):
+    for root, _, filenames in os.walk(path):
         for f in filenames:
-            if f.endswith('.json') or f.endswith('.yaml') or f.endswith('.yml'):
+            if f.endswith(('.yaml', '.yml', '.json')):
                 files.append(os.path.join(root, f))
     return files
 
-def validate_schema(config, schema):
-    if 'required' in schema:
-        for req in schema['required']:
-            if req not in config:
-                return False, f"Missing required key: {req}"
-    return True, "Valid"
-
-def process_configs(path, schema):
-    files = scan_files(path)
-    results = []
-    for fpath in files:
-        try:
-            with open(fpath, 'r') as f:
-                if fpath.endswith('.json'):
-                    config = json.load(f)
-                else:
-                    config = yaml.safe_load(f)
-            valid, msg = validate_schema(config, schema)
-            results.append({'file': fpath, 'valid': valid, 'message': msg})
-        except Exception as e:
-            results.append({'file': fpath, 'valid': False, 'message': str(e)})
-    return results
+def load_config(path):
+    ext = os.path.splitext(path)[1]
+    with open(path, 'r') as f:
+        if ext in ('.yaml', '.yml'):
+            return yaml.safe_load(f)
+        else:
+            return json.load(f)
 
 @click.command()
-@click.argument('path', type=click.Path(exists=True))
-@click.option('--schema', type=click.Path(exists=True), required=True)
-@click.option('--output', type=click.Path(exists=False))
-@click.option('--dry-run', is_flag=True, help='Do not export results, just show table.')
-def main(path, schema, output, dry_run):
-    results = process_configs(path, schema)
+@click.argument('path')
+@click.argument('schema')
+@click.option('--dry-run', is_flag=True, help='Skip writing output files.')
+@click.option('--export', type=click.Path(extensions=['.json']), help='Export findings to JSON.')
+def main(path, schema, dry_run, export):
+    schema_data = load_config(schema)
+    config_files = scan_directory(path)
+    findings = []
+    
+    for f in config_files:
+        try:
+            data = load_config(f)
+            jsonschema.validate(data, schema_data)
+            findings.append({'file': f, 'status': 'valid', 'message': 'OK'})
+        except jsonschema.exceptions.ValidationError as e:
+            findings.append({'file': f, 'status': 'invalid', 'message': str(e.message)})
+        except Exception as e:
+            findings.append({'file': f, 'status': 'error', 'message': str(e)})
+            
     table = Table()
     table.add_column("File")
-    table.add_column("Valid")
+    table.add_column("Status")
     table.add_column("Message")
-    for r in results:
-        table.add_row(r['file'], str(r['valid']), r['message'])
+    for f in findings:
+        table.add_row(f['file'], f['status'], f['message'])
     console.print(table)
     
-    if not dry_run and output:
-        with open(output, 'w') as f:
-            json.dump(results, f)
+    if export and not dry_run:
+        with open(export, 'w') as ef:
+            json.dump(findings, ef)
+    elif export and dry_run:
+        click.echo("Cannot use --export with --dry-run")
 
 if __name__ == '__main__':
     main()

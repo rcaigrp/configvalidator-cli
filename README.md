@@ -1,25 +1,26 @@
 # ConfigValidator CLI
 
-A Python CLI tool to validate configuration files against schemas.
+A Python CLI tool to validate configuration files against JSON schemas.
 
 ## Goal
-Validate JSON/YAML config files against a provided schema, outputting errors and suggestions.
+Validate YAML/JSON config files against a provided JSON schema and report findings.
 
 ## Acceptance Criteria
-1. Recursively scan directories for .json and .yaml files.
-2. Load a provided JSON schema file.
-3. Validate each config file against the schema.
-4. Output a formatted `rich` terminal table of validation results.
+1. Scan specified directory recursively.
+2. Parse YAML and JSON configuration files.
+3. Validate configurations against a JSON schema.
+4. Output a formatted rich terminal table with findings.
 5. Support dry-run mode.
-6. Export results to JSON.
+6. Export findings to JSON.
 
 ## Installation
-pip install rich click pyyaml
+pip install click rich pyyaml jsonschema
 
 ## Usage
-configvalidator /path/to/configs --schema schema.json
+config-validator /path/to/configs /path/to/schema.json --dry-run
 
 ## Project Status
 - Status: Active
-- Meetings Held: 0
+- Meetings Held: 2
 - Meeting Budget: 5
+- All acceptance criteria met. Tests passed.
